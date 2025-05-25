@@ -1,5 +1,6 @@
-tensorflow==2.19.0 # Example; check the compatible version
+tensorflow==2.19.0
 requests
 streamlit
 Pillow
 numpy
+gdown
