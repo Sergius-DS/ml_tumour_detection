@@ -8,51 +8,43 @@ import numpy as np
 from PIL import Image
 import time
 import os
+import gdown  # New import
 
-# Function to download the model from Google Drive
-@st.cache(allow_output_mutation=True)
+# Updated model loading function
+@st.cache_resource
 def load_model_from_url(url, max_retries=3):
+    file_id = url.split('=')[-1]
     for attempt in range(max_retries):
         try:
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
-
             with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as tmp:
-                for chunk in response.iter_content(chunk_size=8192):
-                    tmp.write(chunk)
-                tmp.flush()
-
-                model = load_model(tmp.name)
-                return model
-
-        except requests.exceptions.RequestException as e:
-            print(f"Download error (attempt {attempt + 1}/{max_retries}): {e}")
-            if attempt < max_retries - 1:
-                time.sleep(5)
-            else:
-                st.error(f"Failed to download model after {max_retries} attempts. Please check the URL and your internet connection.")
-                return None
-
+                model_path = tmp.name
+            st.info(f"Downloading model (attempt {attempt + 1}/{max_retries})...")
+            gdown.download(id=file_id, output=model_path, quiet=False)
+            st.success("Model downloaded successfully!")
+            model = load_model(model_path)
+            return model
         except Exception as e:
-            print(f"Error loading model (attempt {attempt + 1}/{max_retries}): {e}")
+            print(f"Error loading or downloading model (attempt {attempt + 1}/{max_retries}): {e}")
+            st.warning(f"Attempt {attempt + 1} failed. Retrying in 5 seconds...")
             if attempt < max_retries - 1:
                 time.sleep(5)
             else:
-                st.error(f"Failed to load model after {max_retries} attempts. Check model format and Keras version compatibility.")
+                st.error("Failed to load model after multiple attempts. Please check the URL or internet connection.")
                 return None
         finally:
-            if 'tmp' in locals():
+            if 'model_path' in locals() and os.path.exists(model_path):
                 try:
-                    os.unlink(tmp.name)
-                except:
-                    pass
+                    os.unlink(model_path)
+                except Exception as e:
+                    print(f"Error deleting temporary file: {e}")
     return None
 
-# Your Google Drive model URL
+# Your model URL
 model_url = 'https://drive.google.com/uc?export=download&id=1qLS6t1a5R3hk5PtpvUxuQQjAHnDcUFeU'
 
-# Load the model
-model = load_model_from_url(model_url)
+# Load model with spinner
+with st.spinner("Loading model... This might take a moment."):
+    model = load_model_from_url(model_url)
 
 # Define class labels
 class_labels = ["Healthy", "Tumor"]
