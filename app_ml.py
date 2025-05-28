@@ -8,7 +8,35 @@ import numpy as np
 from PIL import Image
 import time
 import os
-import gdown  # New import
+import gdown
+import base64# Read the image and encode it in base64
+
+# Function to set background
+def get_base64_image(image_path):
+    with open(image_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    return encoded_string
+
+def set_background(image_path):
+    b64_image = get_base64_image(image_path)
+    css = f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/jpeg;base64,{b64_image}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+# Set your background at the start
+background_image_path = "medical_laboratory.jpg"
+set_background(background_image_path)
+
+
 
 # Updated model loading function
 @st.cache_resource
