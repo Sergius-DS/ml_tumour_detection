@@ -12,7 +12,7 @@ import gdown
 import base64
 
 # Path to your background image
-background_image_path = "medical_laboratory_tensor.jpg"
+background_image_path = "medical_laboratory.jpg"
 
 def get_base64_image(image_path):
     with open(image_path, "rb") as image_file:
