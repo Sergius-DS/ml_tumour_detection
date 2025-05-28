@@ -123,43 +123,46 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if model is not None:
-  # Create two columns: one for uploader, one for image and results
-  col1, col2 = st.columns(2)
+    # Create two columns: one for uploader, one for image
+    col1, col2 = st.columns(2)
   
-  with col1:
-      uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    with col1:
+        uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
   
-  with col2:
-      if uploaded_file is not None:
-          image = Image.open(uploaded_file).convert('RGB')
-          st.image(image, caption='Uploaded Image.', use_container_width=True)
-  
-          processed_image = preprocess_image(image)
-          predictions = model.predict(processed_image)
-  
-          # Interpretación de la predicción
-          if predictions.shape[1] == 1:
-              pred = predictions[0][0]
-              if pred >= 0.5:
-                  predicted_class = "Tumor"
-                  confidence = pred
-              else:
-                  predicted_class = "Healthy"
-                  confidence = 1 - pred
-          elif predictions.shape[1] == 2:
-              probs = predictions[0]
-              predicted_index = np.argmax(probs)
-              predicted_class = class_labels[predicted_index]
-              confidence = probs[predicted_index]
-          else:
-              st.write("Unexpected model output shape:", predictions.shape)
-              predicted_class = "Unknown"
-              confidence = 0.0
-  
-          # Display prediction with custom styling
-          st.markdown(f"""
-          <div class="prediction-box">
-              <h3>Prediction Result:</h3>
-              <p><strong>{predicted_class}</strong> with confidence <strong>{confidence:.2f}</strong></p>
-          </div>
-          """, unsafe_allow_html=True)
+    with col2:
+        if uploaded_file is not None:
+            image = Image.open(uploaded_file).convert('RGB')
+            st.image(image, caption='Uploaded Image.', use_container_width=True)
+            processed_image = preprocess_image(image)
+            predictions = model.predict(processed_image)
+
+            # Interpretación de la predicción
+            if predictions.shape[1] == 1:
+                pred = predictions[0][0]
+                if pred >= 0.5:
+                    predicted_class = "Tumor"
+                    confidence = pred
+                else:
+                    predicted_class = "Healthy"
+                    confidence = 1 - pred
+            elif predictions.shape[1] == 2:
+                probs = predictions[0]
+                predicted_index = np.argmax(probs)
+                predicted_class = class_labels[predicted_index]
+                confidence = probs[predicted_index]
+            else:
+                st.write("Unexpected model output shape:", predictions.shape)
+                predicted_class = "Unknown"
+                confidence = 0.0
+
+            # Store the prediction info to display outside columns
+            prediction_info = f"""
+            <div class="prediction-box">
+                <h3>Prediction Result:</h3>
+                <p><strong>{predicted_class}</strong> with confidence <strong>{confidence:.2f}</strong></p>
+            </div>
+            """
+
+    # After the columns, display the prediction spanning full width
+    if 'prediction_info' in locals():
+        st.markdown(prediction_info, unsafe_allow_html=True)
