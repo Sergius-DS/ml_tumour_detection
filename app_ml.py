@@ -12,6 +12,7 @@ import gdown
 import base64# Read the image and encode it in base64
 
 # Function to set background
+"""
 def get_base64_image(image_path):
     with open(image_path, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()
@@ -35,7 +36,7 @@ def set_background(image_path):
 # Set your background at the start
 background_image_path = "medical_laboratory.jpg"
 set_background(background_image_path)
-
+"""
 
 
 # Updated model loading function
