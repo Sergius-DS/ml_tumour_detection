@@ -60,7 +60,7 @@ def preprocess_image(image, target_size=(224, 224)):
     image_array = preprocess_input(image_array)
     return image_array
 
-st.title("Image Classification App")
+st.title("🧠 Deep Learning for Detecting Brain Tumour 🔎")
 
 if model is not None:
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
