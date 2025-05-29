@@ -160,7 +160,7 @@ if model is not None:
             prediction_info = f"""
             <div class="prediction-box">
                 <h3>Prediction Result:</h3>
-                <p><strong>{predicted_class}</strong> with confidence <strong>{confidence:.2f}</strong></p>
+                <p><strong>{predicted_class}</strong> with confidence <strong>{confidence*100:.2f}%</strong></p>
             </div>
             """
 
