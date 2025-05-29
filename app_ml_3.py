@@ -73,6 +73,7 @@ def set_background(image_path):
 set_background(background_image_path)
 
 # Rest of your model loading functions remain the same
+"""
 @st.cache_resource
 def load_model_from_url(url, max_retries=3):
     file_id = url.split('=')[-1]
@@ -100,7 +101,7 @@ def load_model_from_url(url, max_retries=3):
                 except Exception as e:
                     print(f"Error deleting temporary file: {e}")
     return None
-
+"""
 model_url = 'https://drive.google.com/uc?export=download&id=1qLS6t1a5R3hk5PtpvUxuQQjAHnDcUFeU'
 
 with st.spinner("Loading model... This might take a moment."):
