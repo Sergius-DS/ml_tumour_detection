@@ -51,6 +51,7 @@ def set_background(image_path):
         margin: 10px 0;
         border-left: 4px solid #1f77b4;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center; /* Added for centering text inside prediction box */
     }}
     
     /* Style for file uploader area */
