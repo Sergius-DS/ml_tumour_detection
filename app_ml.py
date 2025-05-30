@@ -93,25 +93,30 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- Integration of the file uploader logic ---
+# --- Layout with two columns for upload and display ---
+col1, col2 = st.columns([1, 1])
 
-# File uploader with session state management
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+with col1:
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-# Check if a new file is uploaded; if so, reset prediction
-if uploaded_file:
-    if st.session_state['uploaded_image'] != uploaded_file:
-        st.session_state['uploaded_image'] = uploaded_file
-        st.session_state['prediction'] = None  # Reset prediction on new upload
-# Keep existing image if no new upload
-elif st.session_state['uploaded_image']:
-    uploaded_file = st.session_state['uploaded_image']
-else:
-    uploaded_file = None
+    predict_button = st.button("Predict")
 
-# --- Prediction logic when button is clicked ---
-predict_button = st.button("Predict")
+    # Check if a new file is uploaded; if so, reset prediction
+    if uploaded_file:
+        if st.session_state.get('uploaded_image') != uploaded_file:
+            st.session_state['uploaded_image'] = uploaded_file
+            st.session_state['prediction'] = None
+    elif st.session_state.get('uploaded_image'):
+        uploaded_file = st.session_state['uploaded_image']
+    else:
+        uploaded_file = None
 
+with col2:
+    if uploaded_file:
+        image = Image.open(uploaded_file).convert('RGB')
+        st.image(image, caption='Uploaded Image.', width=300)
+
+# --- Prediction logic ---
 if predict_button and uploaded_file:
     # Load and preprocess image
     image = Image.open(uploaded_file).convert('RGB')
@@ -120,13 +125,13 @@ if predict_button and uploaded_file:
 
     # Interpret predictions
     if predictions.shape[1] == 1:
-        pred = predictions[0][0]
-        if pred >= 0.5:
+        pred_value = predictions[0][0]
+        if pred_value >= 0.5:
             predicted_class = "Tumor"
-            confidence = pred
+            confidence = pred_value
         else:
             predicted_class = "Healthy"
-            confidence = 1 - pred
+            confidence = 1 - pred_value
     elif predictions.shape[1] == 2:
         probs = predictions[0]
         predicted_index = np.argmax(probs)
@@ -143,12 +148,7 @@ if predict_button and uploaded_file:
         'confidence': confidence
     }
 
-# --- Display uploaded image ---
-if uploaded_file:
-    image = Image.open(uploaded_file).convert('RGB')
-    st.image(image, caption='Uploaded Image.', width=200)
-
-# --- Show prediction result if available ---
+# --- Display prediction result ---
 if st.session_state['prediction']:
     pred = st.session_state['prediction']
     st.markdown(f"""
