@@ -86,65 +86,74 @@ def preprocess_image(image, target_size=(224, 224)):
     from tensorflow.keras.applications.resnet import preprocess_input
     return preprocess_input(image_array)
 
-# Title with custom styling
+# Title
 st.markdown("""
 <div class="main-title">
     <h1>🧠 Deep Learning for Detecting Brain Tumour 🔎</h1>
 </div>
 """, unsafe_allow_html=True)
 
-if model:
-    col1, col2 = st.columns(2)
+# --- Integration of the file uploader logic ---
 
-    with col1:
-        uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-        if uploaded_file:
-            st.session_state['uploaded_image'] = uploaded_file
+# File uploader with session state management
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-        predict_button = st.button("Predict")
+# Check if a new file is uploaded; if so, reset prediction
+if uploaded_file:
+    if st.session_state['uploaded_image'] != uploaded_file:
+        st.session_state['uploaded_image'] = uploaded_file
+        st.session_state['prediction'] = None  # Reset prediction on new upload
+# Keep existing image if no new upload
+elif st.session_state['uploaded_image']:
+    uploaded_file = st.session_state['uploaded_image']
+else:
+    uploaded_file = None
 
-        # When Predict button is clicked
-        if predict_button and st.session_state['uploaded_image']:
-            image = Image.open(st.session_state['uploaded_image']).convert('RGB')
-            processed_image = preprocess_image(image)
-            predictions = model.predict(processed_image)
+# --- Prediction logic when button is clicked ---
+predict_button = st.button("Predict")
 
-            # Interpret predictions
-            if predictions.shape[1] == 1:
-                pred = predictions[0][0]
-                if pred >= 0.5:
-                    predicted_class = "Tumor"
-                    confidence = pred
-                else:
-                    predicted_class = "Healthy"
-                    confidence = 1 - pred
-            elif predictions.shape[1] == 2:
-                probs = predictions[0]
-                predicted_index = np.argmax(probs)
-                predicted_class = class_labels[predicted_index]
-                confidence = probs[predicted_index]
-            else:
-                st.write("Unexpected model output shape:", predictions.shape)
-                predicted_class = "Unknown"
-                confidence = 0.0
+if predict_button and uploaded_file:
+    # Load and preprocess image
+    image = Image.open(uploaded_file).convert('RGB')
+    processed_image = preprocess_image(image)
+    predictions = model.predict(processed_image)
 
-            # Save prediction in session state
-            st.session_state['prediction'] = {
-                'class': predicted_class,
-                'confidence': confidence
-            }
+    # Interpret predictions
+    if predictions.shape[1] == 1:
+        pred = predictions[0][0]
+        if pred >= 0.5:
+            predicted_class = "Tumor"
+            confidence = pred
+        else:
+            predicted_class = "Healthy"
+            confidence = 1 - pred
+    elif predictions.shape[1] == 2:
+        probs = predictions[0]
+        predicted_index = np.argmax(probs)
+        predicted_class = class_labels[predicted_index]
+        confidence = probs[predicted_index]
+    else:
+        st.write("Unexpected model output shape:", predictions.shape)
+        predicted_class = "Unknown"
+        confidence = 0.0
 
-    with col2:
-        if st.session_state['uploaded_image']:
-            image = Image.open(st.session_state['uploaded_image']).convert('RGB')
-            st.image(image, caption='Uploaded Image.', use_container_width=True)
+    # Save prediction to session state
+    st.session_state['prediction'] = {
+        'class': predicted_class,
+        'confidence': confidence
+    }
 
-    # Display prediction if available
-    if st.session_state['prediction']:
-        pred = st.session_state['prediction']
-        st.markdown(f"""
-        <div class="prediction-box">
-            <h3>Prediction Result:</h3>
-            <p><strong>{pred['class']}</strong> with confidence <strong>{pred['confidence']*100:.2f}%</strong></p>
-        </div>
-        """, unsafe_allow_html=True)
+# --- Display uploaded image ---
+if uploaded_file:
+    image = Image.open(uploaded_file).convert('RGB')
+    st.image(image, caption='Uploaded Image.', use_container_width=True)
+
+# --- Show prediction result if available ---
+if st.session_state['prediction']:
+    pred = st.session_state['prediction']
+    st.markdown(f"""
+    <div class="prediction-box">
+        <h3>Prediction Result:</h3>
+        <p><strong>{pred['class']}</strong> with confidence <strong>{pred['confidence']*100:.2f}%</strong></p>
+    </div>
+    """, unsafe_allow_html=True)
