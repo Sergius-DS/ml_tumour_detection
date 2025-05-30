@@ -146,7 +146,7 @@ if predict_button and uploaded_file:
 # --- Display uploaded image ---
 if uploaded_file:
     image = Image.open(uploaded_file).convert('RGB')
-    st.image(image, caption='Uploaded Image.', use_container_width=True)
+    st.image(image, caption='Uploaded Image.', width=200)
 
 # --- Show prediction result if available ---
 if st.session_state['prediction']:
