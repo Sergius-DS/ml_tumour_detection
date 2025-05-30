@@ -106,18 +106,26 @@ st.markdown("""
 if model is not None:
     # Create two columns: one for uploader, one for image
     col1, col2 = st.columns(2)
-  
-    with col1:
-        uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-  
-    with col2:
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file).convert('RGB')
-            st.image(image, caption='Uploaded Image.', use_container_width=True)
+
+with col1:
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    # Add the Predict button below the uploader
+    predict_button = st.button("Predict")
+    
+    # Initialize a placeholder for the prediction message
+    prediction_message = None
+
+with col2:
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file).convert('RGB')
+        st.image(image, caption='Uploaded Image.', use_container_width=True)
+        
+        # Only run prediction if "Predict" button is clicked
+        if predict_button:
             processed_image = preprocess_image(image)
             predictions = model.predict(processed_image)
 
-            # Interpretación de la predicción
+            # Interpret prediction
             if predictions.shape[1] == 1:
                 pred = predictions[0][0]
                 if pred >= 0.5:
@@ -136,14 +144,14 @@ if model is not None:
                 predicted_class = "Unknown"
                 confidence = 0.0
 
-            # Store the prediction info to display outside columns
-            prediction_info = f"""
+            # Create the prediction info HTML
+            prediction_message = f"""
             <div class="prediction-box">
                 <h3>Prediction Result:</h3>
                 <p><strong>{predicted_class}</strong> with confidence <strong>{confidence*100:.2f}%</strong></p>
             </div>
             """
 
-    # After the columns, display the prediction spanning full width
-    if 'prediction_info' in locals():
-        st.markdown(prediction_info, unsafe_allow_html=True)
+# Display the prediction message outside the columns, if available
+if prediction_message:
+    st.markdown(prediction_message, unsafe_allow_html=True)
