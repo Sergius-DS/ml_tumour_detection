@@ -51,7 +51,7 @@ def set_background(image_path):
         margin: 10px 0;
         border-left: 4px solid #1f77b4;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        text-align: center; /* Added for centering text inside prediction box */
+        text-align: center; /* Center text inside prediction box */
     }}
     
     /* Style for file uploader area */
@@ -72,8 +72,7 @@ def set_background(image_path):
 # Call this function at the very top of your script
 set_background(background_image_path)
 
-# Rest of your model loading functions remain the same
-# Define model loader
+# Load the model
 def load_model_from_url(url):
     with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as tmp_file:
         gdown.download(url, tmp_file.name, quiet=False)
@@ -87,6 +86,10 @@ with st.spinner("Loading model... This might take a moment."):
     model = load_model_from_url(model_url)
 
 class_labels = ["Healthy", "Tumor"]
+
+# Initialize session state for prediction result
+if 'prediction' not in st.session_state:
+    st.session_state['prediction'] = None
 
 def preprocess_image(image, target_size=(224, 224)):
     image = image.resize(target_size)
@@ -107,51 +110,52 @@ if model is not None:
     # Create two columns: one for uploader, one for image
     col1, col2 = st.columns(2)
 
-with col1:
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-    # Add the Predict button below the uploader
-    predict_button = st.button("Predict")
-    
-    # Initialize a placeholder for the prediction message
-    prediction_message = None
-
-with col2:
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file).convert('RGB')
-        st.image(image, caption='Uploaded Image.', use_container_width=True)
+    with col1:
+        uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+        # Add the Predict button below the uploader
+        predict_button = st.button("Predict")
         
-        # Only run prediction if "Predict" button is clicked
-        if predict_button:
-            processed_image = preprocess_image(image)
-            predictions = model.predict(processed_image)
+    with col2:
+        if uploaded_file is not None:
+            image = Image.open(uploaded_file).convert('RGB')
+            st.image(image, caption='Uploaded Image.', use_container_width=True)
+            # When Predict button is clicked
+            if predict_button:
+                processed_image = preprocess_image(image)
+                predictions = model.predict(processed_image)
 
-            # Interpret prediction
-            if predictions.shape[1] == 1:
-                pred = predictions[0][0]
-                if pred >= 0.5:
-                    predicted_class = "Tumor"
-                    confidence = pred
+                # Interpret predictions
+                if predictions.shape[1] == 1:
+                    pred = predictions[0][0]
+                    if pred >= 0.5:
+                        predicted_class = "Tumor"
+                        confidence = pred
+                    else:
+                        predicted_class = "Healthy"
+                        confidence = 1 - pred
+                elif predictions.shape[1] == 2:
+                    probs = predictions[0]
+                    predicted_index = np.argmax(probs)
+                    predicted_class = class_labels[predicted_index]
+                    confidence = probs[predicted_index]
                 else:
-                    predicted_class = "Healthy"
-                    confidence = 1 - pred
-            elif predictions.shape[1] == 2:
-                probs = predictions[0]
-                predicted_index = np.argmax(probs)
-                predicted_class = class_labels[predicted_index]
-                confidence = probs[predicted_index]
-            else:
-                st.write("Unexpected model output shape:", predictions.shape)
-                predicted_class = "Unknown"
-                confidence = 0.0
+                    st.write("Unexpected model output shape:", predictions.shape)
+                    predicted_class = "Unknown"
+                    confidence = 0.0
 
-            # Create the prediction info HTML
-            prediction_message = f"""
-            <div class="prediction-box">
-                <h3>Prediction Result:</h3>
-                <p><strong>{predicted_class}</strong> with confidence <strong>{confidence*100:.2f}%</strong></p>
-            </div>
-            """
+                # Store prediction in session state
+                st.session_state['prediction'] = {
+                    'class': predicted_class,
+                    'confidence': confidence
+                }
 
-# Display the prediction message outside the columns, if available
-if prediction_message:
+# Display prediction outside the columns if available
+if st.session_state['prediction']:
+    pred = st.session_state['prediction']
+    prediction_message = f"""
+    <div class="prediction-box">
+        <h3>Prediction Result:</h3>
+        <p><strong>{pred['class']}</strong> with confidence <strong>{pred['confidence']*100:.2f}%</strong></p>
+    </div>
+    """
     st.markdown(prediction_message, unsafe_allow_html=True)
