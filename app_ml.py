@@ -87,7 +87,9 @@ with st.spinner("Loading model... This might take a moment."):
 
 class_labels = ["Healthy", "Tumor"]
 
-# Initialize session state for prediction result
+# Initialize session state for uploaded image and prediction
+if 'uploaded_image' not in st.session_state:
+    st.session_state['uploaded_image'] = None
 if 'prediction' not in st.session_state:
     st.session_state['prediction'] = None
 
@@ -107,20 +109,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if model is not None:
-    # Create two columns: one for uploader, one for image
+    # Create two columns: one for uploader, one for image display
     col1, col2 = st.columns(2)
 
     with col1:
         uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-        # Add the Predict button below the uploader
+        if uploaded_file:
+            # Store uploaded file in session state
+            st.session_state['uploaded_image'] = uploaded_file
+        # Create Predict button
         predict_button = st.button("Predict")
-        
+
     with col2:
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file).convert('RGB')
+        if st.session_state['uploaded_image']:
+            # Show the uploaded image from session state
+            image = Image.open(st.session_state['uploaded_image']).convert('RGB')
             st.image(image, caption='Uploaded Image.', use_container_width=True)
-            # When Predict button is clicked
+
+            # When Predict button is pressed
             if predict_button:
+                # Process the stored image
                 processed_image = preprocess_image(image)
                 predictions = model.predict(processed_image)
 
@@ -143,7 +151,7 @@ if model is not None:
                     predicted_class = "Unknown"
                     confidence = 0.0
 
-                # Store prediction in session state
+                # Save prediction in session state
                 st.session_state['prediction'] = {
                     'class': predicted_class,
                     'confidence': confidence
