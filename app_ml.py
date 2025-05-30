@@ -114,7 +114,7 @@ with col1:
 with col2:
     if uploaded_file:
         image = Image.open(uploaded_file).convert('RGB')
-        st.image(image, caption='Uploaded Image.', width=300)
+        st.image(image, caption='Uploaded Image.', width=240)
 
 # --- Prediction logic ---
 if predict_button and uploaded_file:
