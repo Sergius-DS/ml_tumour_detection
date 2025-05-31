@@ -59,17 +59,19 @@ def set_background(image_path):
 
 set_background(background_image_path)
 
-def load_model_from_url(url):
+def load_model_from_url(file_id):
+    url = f'https://drive.google.com/uc?id={file_id}'
     with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as tmp_file:
         gdown.download(url, tmp_file.name, quiet=False)
         model = load_model(tmp_file.name)
         os.unlink(tmp_file.name)
     return model
 
-model_url = 'https://drive.google.com/uc?export=download&id=1qLS6t1a5R3hk5PtpvUxuQQjAHnDcUFeU'
+file_id = '1qLS6t1a5R3hk5PtpvUxuQQjAHnDcUFeU'
+
 
 with st.spinner("Loading model... This might take a moment."):
-    model = load_model_from_url(model_url)
+    model = load_model_from_url(file_id)
 
 class_labels = ["Healthy", "Tumor"]
 
